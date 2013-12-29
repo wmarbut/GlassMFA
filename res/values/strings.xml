@@ -1,0 +1,7 @@
+<resources>
+
+    <string name="app_name">GlassMFA</string>
+    
+    <string name="voice_get_multifactor">get multifactor token</string>
+
+</resources>
