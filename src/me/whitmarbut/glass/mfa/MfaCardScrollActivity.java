@@ -29,7 +29,7 @@ public class MfaCardScrollActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		secretProvider = new MFASecretsProvider();
+		secretProvider = new MFASecretsProvider(this);
 		
 		buildCards();
 		
