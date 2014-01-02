@@ -11,12 +11,18 @@ import me.whitmarbut.glass.mfa.model.SecretCard;
 import me.whitmarbut.glass.mfa.util.MFASecretsProvider;
 import me.whitmarbut.mfa.TOTP;
 
+import com.google.android.glass.touchpad.Gesture;
+import com.google.android.glass.touchpad.GestureDetector;
 import com.google.android.glass.widget.CardScrollAdapter;
 import com.google.android.glass.widget.CardScrollView;
 import com.google.android.glass.app.Card;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -25,6 +31,7 @@ public class MfaCardScrollActivity extends Activity {
 	private CardScrollView cardScrollView;
 	private MFASecretsProvider secretProvider;
 	private Timer updateTimer;
+	private GestureDetector gestureDetector;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +44,8 @@ public class MfaCardScrollActivity extends Activity {
 		cardScrollView = new CardScrollView(this);
 		MFACardScrollAdapter adapter = new MFACardScrollAdapter();
 		cardScrollView.setAdapter(adapter);
+		
+		gestureDetector = buildGestureDetector();
 		
 		cardScrollView.activate();
 		setContentView(cardScrollView);
@@ -56,6 +65,10 @@ public class MfaCardScrollActivity extends Activity {
 		MFASecret[] secrets = secretProvider.getSecrets();
 		
 		SecretCard card;
+		
+		//Intent menuIntent = new Intent(this, CompassMenuActivity.class);
+        //menuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        //mLiveCard.setAction(PendingIntent.getActivity(this, 0, menuIntent, 0));
 		
 		for (MFASecret secret : secrets) {
 			card = new SecretCard(this);
@@ -95,6 +108,37 @@ public class MfaCardScrollActivity extends Activity {
 		
 		updateTimer.scheduleAtFixedRate(task, next_date, period);
 	}
+	
+	private GestureDetector buildGestureDetector() {
+		
+		GestureDetector detector = new GestureDetector(this);
+		detector.setBaseListener(new GestureDetector.BaseListener() {
+			
+			@Override
+			public boolean onGesture(Gesture gesture) {
+				Log.i("GlassMFA", "Received gesture: " + gesture.toString());
+				if (gesture  == Gesture.TAP || gesture == Gesture.LONG_PRESS) {
+					Intent menu_intent = new Intent(MfaCardScrollActivity.this, MFAMenuActivity.class);
+					menu_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+					Log.i("GlassMFA", "Starting MFA menu intent");
+					
+					startActivity(menu_intent);
+					return true;
+				}
+				return false;
+			}
+		});
+		
+		return detector;
+	}
+	
+	@Override
+    public boolean onGenericMotionEvent(MotionEvent event) {
+        if (gestureDetector != null) {
+            return gestureDetector.onMotionEvent(event);
+        }
+        return false;
+    }
 	
 	private class UpdateCardTimerTask extends TimerTask {
 

@@ -35,6 +35,14 @@
                 android:resource="@xml/voice_trigger_qr"/>
         </activity>
         <activity
+            android:name="me.whitmarbut.glass.mfa.MFAMenuActivity"
+            android:label="@string/app_name"
+            android:icon="@drawable/mfa_icon"> 
+            <intent-filter>
+                
+            </intent-filter>
+        </activity>
+        <activity
             android:name="com.google.zxing.client.android.CaptureActivity"
             android:configChanges="orientation|keyboardHidden"
             android:screenOrientation="landscape"

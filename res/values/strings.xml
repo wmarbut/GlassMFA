@@ -2,7 +2,7 @@
 
     <string name="app_name">GlassMFA</string>
     
-    <string name="voice_get_multifactor">get multifactor token</string>
+    <string name="voice_get_multifactor">multifactor token</string>
 
     <string name="scan_code_menu">Scan QR Code</string>
     

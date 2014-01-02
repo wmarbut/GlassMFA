@@ -80,7 +80,7 @@ public final class R {
         public static final int result_list_view=0x7f09001e;
         public static final int result_view=0x7f09000d;
         public static final int return_scan_result=0x7f090006;
-        public static final int scan_code=0x7f09002d;
+        public static final int scan_qr_code=0x7f09002d;
         public static final int share_app_button=0x7f090021;
         public static final int share_bookmark_button=0x7f090022;
         public static final int share_clipboard_button=0x7f090024;
