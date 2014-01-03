@@ -7,4 +7,6 @@
     <string name="scan_code_menu">Scan QR Code</string>
     
     <string name="voice_get_multifactor_qr">scan multifactor code</string>
+    
+    <string name="delete_code_menu">Delete this code</string>
 </resources>

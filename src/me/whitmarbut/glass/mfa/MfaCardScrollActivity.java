@@ -11,6 +11,7 @@ import me.whitmarbut.glass.mfa.model.SecretCard;
 import me.whitmarbut.glass.mfa.util.MFASecretsProvider;
 import me.whitmarbut.mfa.TOTP;
 
+import com.example.glassmfa.R;
 import com.google.android.glass.touchpad.Gesture;
 import com.google.android.glass.touchpad.GestureDetector;
 import com.google.android.glass.widget.CardScrollAdapter;
@@ -19,19 +20,26 @@ import com.google.android.glass.app.Card;
 
 import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
 
 public class MfaCardScrollActivity extends Activity {
 	private List<Card> cards;
 	private CardScrollView cardScrollView;
 	private MFASecretsProvider secretProvider;
 	private Timer updateTimer;
-	private GestureDetector gestureDetector;
+	private SecretCard current_card;
+	private int current_card_id;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -42,10 +50,9 @@ public class MfaCardScrollActivity extends Activity {
 		
 		
 		cardScrollView = new CardScrollView(this);
+		cardScrollView.setOnItemClickListener(new MFACardScrollResponder());
 		MFACardScrollAdapter adapter = new MFACardScrollAdapter();
 		cardScrollView.setAdapter(adapter);
-		
-		gestureDetector = buildGestureDetector();
 		
 		cardScrollView.activate();
 		setContentView(cardScrollView);
@@ -73,12 +80,19 @@ public class MfaCardScrollActivity extends Activity {
 		for (MFASecret secret : secrets) {
 			card = new SecretCard(this);
 			card.setFootnote(secret.getLabel());
-			card.setSecret(secret.getSecret());
+			card.setSecret(secret);
 			card.setText(secret.getLabel());
 			cards.add(card);
 		}
 		
 		updateCards();
+	}
+	
+	public SecretCard getSelectedCard() {
+		if (cardScrollView != null) {
+			return (SecretCard) cardScrollView.getSelectedItem();
+		}
+		return null;
 	}
 	
 	private void updateCards() {
@@ -109,36 +123,6 @@ public class MfaCardScrollActivity extends Activity {
 		updateTimer.scheduleAtFixedRate(task, next_date, period);
 	}
 	
-	private GestureDetector buildGestureDetector() {
-		
-		GestureDetector detector = new GestureDetector(this);
-		detector.setBaseListener(new GestureDetector.BaseListener() {
-			
-			@Override
-			public boolean onGesture(Gesture gesture) {
-				Log.i("GlassMFA", "Received gesture: " + gesture.toString());
-				if (gesture  == Gesture.TAP || gesture == Gesture.LONG_PRESS) {
-					Intent menu_intent = new Intent(MfaCardScrollActivity.this, MFAMenuActivity.class);
-					menu_intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-					Log.i("GlassMFA", "Starting MFA menu intent");
-					
-					startActivity(menu_intent);
-					return true;
-				}
-				return false;
-			}
-		});
-		
-		return detector;
-	}
-	
-	@Override
-    public boolean onGenericMotionEvent(MotionEvent event) {
-        if (gestureDetector != null) {
-            return gestureDetector.onMotionEvent(event);
-        }
-        return false;
-    }
 	
 	private class UpdateCardTimerTask extends TimerTask {
 
@@ -155,6 +139,60 @@ public class MfaCardScrollActivity extends Activity {
 		}
 		
 	}
+	
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+    	getMenuInflater().inflate(R.menu.mfa_menu, menu);
+        
+        return true;
+    }
+	
+	protected void deleteSecret() {
+    	MFASecretsProvider provider = new MFASecretsProvider(this);
+   		if (current_card != null) {
+   			secretProvider.deleteSecret( current_card.getSecretObject() );
+   			cards.remove(current_card_id);
+   			cardScrollView.updateViews(true);
+   		} else {
+   			Log.e("GlassMFA", "Unable to delete current card, it was null");
+   		}
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.scan_qr_code:
+            	Intent qr_intent = new Intent(this, MFAScanQRActivity.class);
+            	startActivity(qr_intent);
+            	return true;
+            case R.id.delete_secret:
+            	this.deleteSecret();
+            	return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+    
+    private class MFACardScrollResponder implements OnItemClickListener, OnItemLongClickListener{
+		
+		@Override
+		public void onItemClick(AdapterView<?> parent, View view, int position,
+				long id) {
+			Log.i("GlassMFA", "Item click received. Should open menu");
+			MfaCardScrollActivity.this.current_card = (SecretCard) cards.get(position);
+			MfaCardScrollActivity.this.current_card_id = position;
+			MfaCardScrollActivity.this.openOptionsMenu();
+			
+		}
+
+		@Override
+		public boolean onItemLongClick(AdapterView<?> parent, View view,
+				int position, long id) {
+			onItemClick(parent, view, position, id);
+			return true;
+		}
+    	
+    }
 	
 	private class MFACardScrollAdapter extends CardScrollAdapter {
 
@@ -182,6 +220,8 @@ public class MfaCardScrollActivity extends Activity {
 	    public View getView(int position, View convertView, ViewGroup parent) {
 	        return cards.get(position).toView();
 	    }
+
+		
 		
 	}
 }

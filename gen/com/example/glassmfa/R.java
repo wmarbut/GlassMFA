@@ -55,6 +55,7 @@ public final class R {
         public static final int decode=0x7f090000;
         public static final int decode_failed=0x7f090001;
         public static final int decode_succeeded=0x7f090002;
+        public static final int delete_secret=0x7f09002e;
         public static final int format_text_view=0x7f09000f;
         public static final int help_contents=0x7f090019;
         public static final int history_detail=0x7f09001b;
@@ -146,6 +147,7 @@ public final class R {
         public static final int contents_phone=0x7f0a001d;
         public static final int contents_sms=0x7f0a001e;
         public static final int contents_text=0x7f0a001f;
+        public static final int delete_code_menu=0x7f0a0079;
         public static final int history_clear_one_history_text=0x7f0a0021;
         public static final int history_clear_text=0x7f0a0020;
         public static final int history_email_title=0x7f0a0022;
