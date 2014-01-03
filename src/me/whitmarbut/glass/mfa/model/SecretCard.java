@@ -1,4 +1,9 @@
 package me.whitmarbut.glass.mfa.model;
+/**
+ * @copyright 2014 Whit Marbut
+ * Licensed under Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International.
+ * Full text of the license may be found here http://creativecommons.org/licenses/by-nc-sa/4.0/deed.en_US
+ */
 
 import android.content.Context;
 
