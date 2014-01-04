@@ -46,6 +46,7 @@ public class MfaCardScrollActivity extends Activity {
 	private Timer updateTimer;
 	private SecretCard current_card;
 	private int current_card_id;
+	private static final String DEFAULT_CARD_TEXT = "Please use the Scan a QR code function in the menu.";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -90,8 +91,30 @@ public class MfaCardScrollActivity extends Activity {
 			card.setText(secret.getLabel());
 			cards.add(card);
 		}
+		handleNoCards();
 		
 		updateCards();
+	}
+	
+	private void handleNoCards() {
+		if (cards.size() > 1) {
+			int card_size = cards.size();
+			for (int i = 0; i < card_size; i++) {
+				if (cards.get(i).getText() == DEFAULT_CARD_TEXT) {
+					cards.remove(i);
+					cardScrollView.updateViews(true);
+				}
+			}
+		} else if (cards.size() == 0) {
+			Card default_card = new Card(this);
+			default_card.setText(DEFAULT_CARD_TEXT);
+			default_card.setFootnote("Contribute code or bug reports on github.com/grep-awesome/GlassMFA");
+			cards.add(default_card);
+			
+			if (cardScrollView != null) {
+				cardScrollView.updateViews(true);
+			}
+		}
 	}
 	
 	public SecretCard getSelectedCard() {
@@ -105,8 +128,10 @@ public class MfaCardScrollActivity extends Activity {
 		TOTP totp = new TOTP();
 		int card_len = cards.size();
 		for (int i = 0; i < card_len; i++) {
-			SecretCard card = (SecretCard) cards.get(i);
-			card.setText(totp.getToken(card.getSecret()));
+			if (cards.get(i) instanceof SecretCard) {
+				SecretCard card = (SecretCard) cards.get(i);
+				card.setText(totp.getToken(card.getSecret()));
+			}
 		}
 		
 	}
@@ -156,9 +181,12 @@ public class MfaCardScrollActivity extends Activity {
 	protected void deleteSecret() {
     	MFASecretsProvider provider = new MFASecretsProvider(this);
    		if (current_card != null) {
-   			secretProvider.deleteSecret( current_card.getSecretObject() );
-   			cards.remove(current_card_id);
-   			cardScrollView.updateViews(true);
+   			if (current_card instanceof SecretCard) {
+   				secretProvider.deleteSecret( current_card.getSecretObject() );
+   				cards.remove(current_card_id);
+   				cardScrollView.updateViews(true);
+   				handleNoCards();
+   			}
    		} else {
    			Log.e("GlassMFA", "Unable to delete current card, it was null");
    		}
@@ -185,8 +213,10 @@ public class MfaCardScrollActivity extends Activity {
 		public void onItemClick(AdapterView<?> parent, View view, int position,
 				long id) {
 			Log.i("GlassMFA", "Item click received. Should open menu");
-			MfaCardScrollActivity.this.current_card = (SecretCard) cards.get(position);
-			MfaCardScrollActivity.this.current_card_id = position;
+			if (cards.get(position) instanceof SecretCard) {
+				MfaCardScrollActivity.this.current_card = (SecretCard) cards.get(position);
+				MfaCardScrollActivity.this.current_card_id = position;
+			}
 			MfaCardScrollActivity.this.openOptionsMenu();
 			
 		}
